@@ -1378,6 +1378,8 @@ libusb_device_handle * LIBUSB_CALL libusb_open_device_with_vid_pid(
 
 int LIBUSB_CALL libusb_set_interface_alt_setting(libusb_device_handle *dev_handle,
 	int interface_number, int alternate_setting);
+int LIBUSB_CALL libusb_set_interface_for_control_transfers(libusb_device_handle *dev_handle,
+	int interface_number);
 int LIBUSB_CALL libusb_clear_halt(libusb_device_handle *dev_handle,
 	unsigned char endpoint);
 int LIBUSB_CALL libusb_reset_device(libusb_device_handle *dev_handle);

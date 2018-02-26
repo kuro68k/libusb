@@ -1256,6 +1256,8 @@ int API_EXPORTED libusb_open(libusb_device *dev,
 	_dev_handle->dev = libusb_ref_device(dev);
 	_dev_handle->auto_detach_kernel_driver = 0;
 	_dev_handle->claimed_interfaces = 0;
+	_dev_handle->control_interface = -1;			// -1 == unset, use first
+													// valid interface
 	memset(&_dev_handle->os_priv, 0, priv_size);
 
 	r = usbi_backend.open(_dev_handle);
@@ -1702,6 +1704,37 @@ int API_EXPORTED libusb_set_interface_alt_setting(libusb_device_handle *dev_hand
 
 	return usbi_backend.set_interface_altsetting(dev_handle, interface_number,
 		alternate_setting);
+}
+
+/** \ingroup libusb_dev
+* Set the interface to use for control transfers.
+*
+* By default libusb sends control transfers to the first valid interface
+* on the device. By setting the interface with this function all future
+* control requests will go to the selected interface instead.
+*
+* You can return to the default behaviour by selecting interface -1.
+*
+* This is a non-blocking function. The interface setting is not validated.
+*
+* \param dev_handle a device handle
+* \param interface_number the <tt>bInterfaceNumber</tt> of the
+* interface to send control transfers to, or -1 for default behaviour
+* \returns 0 on success
+* \returns LIBUSB_ERROR_INVALID_PARAM if interface_number is invalid
+*/
+int API_EXPORTED libusb_set_interface_for_control_transfers(libusb_device_handle *dev_handle,
+	int interface_number)
+{
+	if ((interface_number >= USB_MAXINTERFACES)
+		|| (interface_number < -1))
+		return LIBUSB_ERROR_INVALID_PARAM;
+
+	usbi_mutex_lock(&dev_handle->lock);
+	dev_handle->control_interface = interface_number;
+	usbi_mutex_unlock(&dev_handle->lock);
+
+	return 0;
 }
 
 /** \ingroup libusb_dev

@@ -2308,6 +2308,7 @@ static int winusbx_claim_interface(int sub_api, struct libusb_device_handle *dev
 				return LIBUSB_ERROR_ACCESS;
 			}
 		}
+		handle_priv->interface_handle[iface].dev_handle = handle_priv->interface_handle[0].dev_handle;
 	}
 	usbi_dbg("claimed interface %d", iface);
 	handle_priv->active_interface = iface;
@@ -2347,11 +2348,22 @@ static int get_valid_interface(struct libusb_device_handle *dev_handle, int api_
 		return -1;
 	}
 
-	for (i = 0; i < USB_MAXINTERFACES; i++) {
+	if (dev_handle->control_interface == -1)	// -1 == unset, return first valid interface
+	{
+		for (i = 0; i < USB_MAXINTERFACES; i++) {
 		if (HANDLE_VALID(handle_priv->interface_handle[i].dev_handle)
 				&& HANDLE_VALID(handle_priv->interface_handle[i].api_handle)
 				&& (priv->usb_interface[i].apib->id == api_id))
 			return i;
+		}
+	}
+	else	// find a specific interface
+	{
+		int iface = dev_handle->control_interface;
+		if (HANDLE_VALID(handle_priv->interface_handle[iface].dev_handle)
+			&& HANDLE_VALID(handle_priv->interface_handle[iface].api_handle)
+			&& (priv->usb_interface[iface].apib->id == api_id))
+			return iface;
 	}
 
 	return -1;
